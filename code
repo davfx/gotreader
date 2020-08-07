@@ -1,0 +1,331 @@
+
+/// inicializacion variables arrays, no arrays, todo 
+String[] Season = new String [74];
+float[] Rating = new float [74];
+float RatingConv;
+String[] Episode = new String [74];
+String[] Title = new String[74];
+int i = 0;
+int max = 10;
+float nfilas = 73; //73 episodios 
+color bgcolor = color(255);
+
+
+// numero de episodios de cada temporada
+int s1= 10;
+int s2 = 10;
+int s3 = 10;
+int s4 = 10;
+int s5 = 10;
+int s6 = 10;
+int s7 = 7;
+int s8 = 6;
+
+// nota media de cada temporada
+float avgs1 = 0 ;
+float avgs2;
+float avgs3;
+float avgs4;
+float avgs5;
+float avgs6;
+float avgs7;
+float avgs8;
+
+
+// para la funcion overclick
+int x;
+int y;
+
+void setup() {
+  //medida canvas
+  size(1440, 1080);
+  // setups iniciales
+  imageMode(CENTER);
+  stroke(255);
+
+  // carga y crea la fuente de got
+  PFont gotfont = createFont("GOTFONT.ttf", 12);
+  textFont(gotfont);
+
+
+  //reader del archivo, lee lineas y luego las separa por columnas. 
+  BufferedReader reader = createReader("GOT.csv");
+  String linea = null;
+  try {
+    while ((linea = reader.readLine()) != null) {
+      String[] columnas = split(linea, ",");
+      Season[i] = columnas[0];
+      Episode[i] = columnas[1];
+      Rating[i] = float(columnas[2]);
+      Title[i] = columnas [3];
+      //   println(Episode[i] +" "+ Rating[i]);
+      i++;
+    }
+    reader.close();
+  } 
+  catch (IOException e) {
+    e.printStackTrace();
+  }
+
+  // esto lo calculo en el setup porque con una vez ya esta bien. 
+  // rating medio de cada temp de la 1 a la 6 (pq tienen 10 ep cada una)
+  // de 1 a 11 porque la fila 0 son los titulos
+  for (int i = 1; i<11; i++) {
+    avgs1 +=  Rating[i]/s1 ;
+    avgs2 +=  Rating[i+10]/s2 ;
+    avgs3 +=  Rating[i+20]/s3 ;
+    avgs4 +=  Rating[i+30]/s5 ;
+    avgs5 +=  Rating[i+40]/s5 ;
+    avgs6 +=  Rating[i+50]/s6 ;
+  }
+  // rating de la 7 y luego la 8. el +1 es para tener en cuenta que empieza todo en la fila 2(antes estan los titulos)
+  for (int i = 60+1; i<67+1; i++) {
+    avgs7 +=  Rating[i]/s7 ;
+    println(avgs7);
+  }
+  for (int i = 67+1; i<73+1; i++) {
+    avgs8 +=  Rating[i]/s8 ;
+    //  println(avgs8);
+  }
+}
+
+void draw() {
+  //noLoop();
+  //println(mouseX,mouseY);
+
+  // condicional para resetear la comparación. si x = 0 no hace comparacion. coordenadas del boton reset. 
+  if (mouseX>1372&&mouseX<1430&&mouseY>960&&mouseY<975&&mousePressed ==true) {
+    background(0);  //no es necesario, pero para que se vea el efecto.
+    noStroke();
+    x=0;
+  } else {
+    // aqui abajo el resto.
+    // definimos background de un color para por si lo queremos cambiar que se cambie todo a la vez.
+    background(bgcolor);  
+    //lo que quiero al fondo lo pongo primero
+    fondotemp();  
+    barritas();
+    avgcirculos();
+    //imagen got. La cargo aqui porque en el setup me daba problemas. 
+    PImage gotlogo = loadImage("gotlogo.jpg");
+    gotlogo.resize(170, 170);
+    image(gotlogo, width/2, height/2);
+    // SETUPS Y LEYENDAS
+    fill(0);
+    textAlign(CENTER);
+    text("ratings", width/2, height/2+60);
+    textSize(10);
+    textAlign(LEFT);
+    fill(0);
+    text("el circulo  rojo   es  rating 5.0", 100, 950);
+    text("el circulo  negro  es  rating  10", 100, 975);
+    text("mas negro, mejor nota", 100, 925);
+    text("por debajo de 8.5, de color rojo", 100, 900);
+    text("click reset para resetear comparacion",100,1000);
+    textSize(20);
+    //boton reset
+    text ("reset", width-75, height-100);
+    // para que no haya lios "reseteo" el stroke y fill.
+    stroke(0);
+    noFill();
+  }
+} 
+
+
+
+
+
+// funcion que dibuja las barras de los ratings
+void barritas() {
+
+  strokeWeight(1);
+  // angulo = 0 para reinicializar
+  float separation = TWO_PI/nfilas*2;   
+  float angulo = 0;
+
+  // bucle creador
+  for (int i=1; i<74; i++) {
+    // reinicializamos stroke y fill para que no haya lios
+    noStroke();
+    noFill();
+    //conversor de rating de 0 a 10 de 0 a los pixeles que necesito (360) mas tarde he descubierto la funcion map. vaya.
+    RatingConv = 360*(Rating[i]/10);
+
+    //conversor de rating a color. envez de hacer de 0 a 10 hago de 5 a 10 ya que la mayoria de episodios estan por ahi
+    float RatingConvcolor = 255*((Rating[i]-5)/5);
+
+    // condicional para mouse encima
+    if (overEsta(angulo, separation)) {
+      // instrucciones para marcar episodio, temporada y titulo
+      noStroke();
+      fill(0);
+      textSize(15);
+      textAlign(LEFT);
+      text("Season       " + Season[i], 100, 50);
+      text("Episode       " + Episode[i], 100, 75);
+      text("Rating      " + Rating[i], 100, 100);
+      textSize(20);
+
+      text( Title[i], 100, 150);
+      // rectangulo de color para que se entienda mejor
+      fill(255, 128, 0);
+      rect(95, 35, -10, 115);
+
+      // si no esta encima, condicional para esta funcion. por eso el elseif. solo quiero que compare si son distintas.
+    } else if (overClick(angulo, separation)) {
+      // instrucciones para marcar episodio, temporada y titulo
+      noStroke();
+      fill(0);
+      textSize(15);
+      textAlign(RIGHT);
+      text("Season        " + Season[i], width-100, 50);
+      text("Episode        " + Episode[i], width-100, 75);
+      text("Rating     " + Rating[i], width-100, 100);
+      textSize(20);
+
+      text( Title[i], width-100, 150);
+
+      fill(255, 128, 128);
+      rect(width-95, 35, 10, 115);
+
+      // mas de lo mismo, si no le afecta nada del mouse, rellenamos de colores acordes con la nota
+    } else if (Rating[i]<8.5) {
+
+      fill(255-RatingConvcolor, 0, 0);
+    } else if (Rating[i]>=8.5) {
+      //      println(RatingConvcolor);
+      fill(255-RatingConvcolor);
+    }
+
+
+    // una vez hechos los condicionales se dibuja arco. rating*2 porque radio diametro
+    arc(width/2, height/2, RatingConv*2, RatingConv*2, angulo, angulo+separation/2);
+    // triangle(width/2,height/2,p1x,p1y,p2x,p2y);
+
+    //siguiente barra
+    angulo = angulo + separation/2;
+  }
+  //circulo que tapa el centro de los arcos. de color del fondo
+  fill(bgcolor);
+  ellipse(width/2, height/2, 270, 270);
+  noFill();
+  strokeWeight(2);
+  //circulo rating 5
+  stroke(255, 0, 0, 100);
+  ellipse(width/2, height/2, 310, 310);
+  // circulo rating 10 
+  stroke(0, 100);
+  ellipse(width/2, height/2, 712, 712);
+}
+
+// funcion que dibuja las lineas negras exteriores que indican la nota media de la temporada
+void avgcirculos() {
+
+  float separacion = TWO_PI/nfilas;
+  noFill();
+  stroke(0);
+  strokeWeight(4);
+  // quiero que este entre el exterior del circulo rating 10 y el interior de los colores (208 de dist),
+  //por eso he de convertir la nota, y sumarle la dist del circulo rating 10
+  RatingConv = 208*(avgs1/10)+712;
+  arc(width/2, height/2, RatingConv, RatingConv, 0, separacion*s1);
+  RatingConv = 208*(avgs2/10)+712;    
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*s1, separacion*(s1+s2));
+  RatingConv = 208*(avgs3/10)+712;    
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2), separacion*(s1+s2+s3));
+  RatingConv = 208*(avgs4/10)+712;
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2+s3), separacion*(s1+s2+s3+s4));
+  RatingConv = 208*(avgs5/10)+712;
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2+s3+s4), separacion*(s1+s2+s3+s4+s5));
+  RatingConv = 208*(avgs6/10)+712; 
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2+s3+s4+s5), separacion*(s1+s2+s3+s4+s5+s6));
+  RatingConv = 208*(avgs7/10)+712;
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2+s3+s4+s5+s6), separacion*(s1+s2+s3+s4+s5+s6+s7));
+  RatingConv = 208*(avgs8/10)+712;
+  arc(width/2, height/2, RatingConv, RatingConv, separacion*(s1+s2+s3+s4+s5+s6+s7), separacion*(s1+s2+s4+s4+s5+s6+s7+s8));
+}
+
+
+
+// FUNCION BOOLEAN MEMORIZA EL LUGAR Y DEVUELVE TRUE CUANDO EL BUCLE ESTA EN ESE LUGAR. SIMILIAR A OVERESTA.. MIRAR OVERESTA.
+boolean overClick(float anguloo, float separacioon) { 
+  //respuesta final ha de ser boolean
+  boolean respfin = false;
+  float angu;
+  //este if ha de cerrarse desp de definir x e y. almacena x e y cuando se ha hecho click
+  if (mousePressed == true) {
+    x = mouseX;
+    y = mouseY;
+  }
+
+  if (x!=0) {     //condicional para que no calcule nada hasta que se ha clickado el mouse( y por lo tanto asignado x e y)
+    //calculamos el angulo 
+    angu = atan2(y-height/2, x-width/2);  
+    if (angu<0) {   // atan2 devuelve de -pi a pi. este if modifica ppara que de valores de 0 a 2pi. cuando el xymouse es negativo, se le resta al resto de recorrido que le queda
+      angu = TWO_PI+angu;
+    }
+
+    if (angu<=((anguloo+separacioon/2))&&(angu)>anguloo) {  //si se encuentra entre 
+      //     println(angu);
+      respfin = true;
+    }
+  }
+
+
+  return (respfin);
+}
+
+
+//FUNCION BOOLEAN PARA DETECTAR DONDE ESTAELMOUSE.
+
+boolean overEsta(float anguloo, float separation) {
+  //respuesta final
+  boolean respdef = false;
+  boolean resp1 = false;  
+  boolean resp2 = false;
+  // atan2 devuelve de -pi a pi. esto modifica ppara que de valores de 0 a 2pi. cuando el xymouse es negativo, se le resta al resto de recorrido que le queda
+  float xymouse = atan2(mouseY-height/2, mouseX-width/2);
+  if (xymouse<0) {
+    xymouse = TWO_PI+xymouse;
+  }
+  //si se encuentra donde yo quiero(cursor entre separacion)
+  if (xymouse<((anguloo+separation/2))&&(xymouse)>anguloo) {
+    println(anguloo + "    " + xymouse + "      " + anguloo+separation/2);
+    resp1 = true;
+  } else {
+    resp1 = false;
+  }
+  //condicional para que no detecte en la redonda del centro
+
+  if (mouseX>(width/2+115)||mouseY>(height/2+115)||mouseX<(width/2-115)||mouseY<(height/2-115)) {
+    resp2 = true;
+  }
+  if (resp1&&resp2) {
+    respdef = true;
+  }
+
+  return (respdef);
+}
+
+void fondotemp() {
+  // arcos rellenados de diferentes colores en funcion de el numero de capitulos tiene cada temporada. 
+  float circulo = 920;
+  float separacion = TWO_PI/nfilas;
+  noStroke();
+  fill(#334659, 200);
+  arc(width/2, height/2, circulo, circulo, 0, separacion*s1);
+  fill(#332E27, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*s1, separacion*(s1+s2));
+  fill(#443D23, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2), separacion*(s1+s2+s3));
+  fill(#696056, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2+s3), separacion*(s1+s2+s3+s4));
+  fill(#644030, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2+s3+s4), separacion*(s1+s2+s3+s4+s5));
+  fill(#232E3B, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2+s3+s4+s5), separacion*(s1+s2+s3+s4+s5+s6));
+  fill(#343C32, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2+s3+s4+s5+s6), separacion*(s1+s2+s3+s4+s5+s6+s7));
+  fill(#281C16, 200);
+  arc(width/2, height/2, circulo, circulo, separacion*(s1+s2+s3+s4+s5+s6+s7), separacion*(s1+s2+s4+s4+s5+s6+s7+s8));
+}
